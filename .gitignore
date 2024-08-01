@@ -1,0 +1,15 @@
+# Node modules directory
+node_modules/
+
+# Log files
+npm-debug.log
+
+# Environment variables file
+.env
+
+# Production build directory
+build/
+
+# IDE specific files
+.vscode/
+.idea/
