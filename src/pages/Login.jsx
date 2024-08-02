@@ -43,7 +43,7 @@ const Login = () => {
     e.preventDefault();
     try {
       if (validate()) {
-        const response = await axios.post(`http://localhost:8080/api/v1/auth/login`, formData);
+        const response = await axios.post(`http://localhost:8080/api/v1/users/login`, formData);
         const user = response.data;
         setCurrentUser(user);
         console.log(user);

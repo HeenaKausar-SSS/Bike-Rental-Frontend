@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
+
+  const [backendError, setBackendError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,10 +19,28 @@ const AdminLogin = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic
-    console.log(formData);
+    try {
+      const response = await axios.post('http://localhost:8080/api/v1/auth/admin/login', formData);
+      const adminData = response.data;
+      console.log(adminData);
+      // Assuming the response contains a token or some kind of auth information
+      if (adminData) {
+        setBackendError('');
+        // Save auth token or admin data to local storage or context if needed
+        // localStorage.setItem('token', adminData.token);
+        navigate('/admin'); // Replace with the actual admin dashboard route
+      } else {
+        setBackendError('Invalid login credentials');
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        setBackendError(error.response.data.message);
+      } else {
+        setBackendError('An error occurred. Please try again.');
+      }
+    }
   };
 
   return (
@@ -48,11 +70,11 @@ const AdminLogin = () => {
           />
         </div>
         <button type="submit" className="submit-btn">Login</button>
+        {backendError && <p className="backend-error">{backendError}</p>}
         <div className="register-link">
           <Link to="/admin/admin-register">Not registered? Register here</Link>
         </div>
       </form>
-    
     </div>
   );
 };

@@ -1,163 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { FaEye } from 'react-icons/fa';
-import { MdModeEdit } from "react-icons/md";
-import { MdDelete } from "react-icons/md";
+import { MdModeEdit, MdDelete } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
 import user1 from '../../images/user1.jpg';
 import PaginationTable from '../../components/Pagination';
-
-const users = [
-  {
-    id: 1,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 2,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 3,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 4,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 5,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 6,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 7,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 8,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 9,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 10,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 11,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 12,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 13,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 14,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  {
-    id: 15,
-    profilePhoto: user1,
-    firstName: 'John',
-    lastName: 'Doe',
-    contact: '123-456-7890',
-    address: '1234 Long Address Street Name, City, State, Zip Code',
-    email: 'john.doe@example.com',
-    password: '********',
-  },
-  // Add more user data as needed
-];
 
 const columns = [
   "ID", 
@@ -167,27 +14,63 @@ const columns = [
   "Contact", 
   "Address", 
   "Email", 
-  "Password", 
   "Actions"
 ];
 
 const UserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/auth/admin/users');
+        setUsers(response.data);
+        // console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setError('Failed to fetch users');
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleView = (id) => {
+    navigate(`/profile/${id}`);
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/profile/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/v1/auth/admin/users/${id}`);
+      setUsers(users.filter(user => user.id !== id));
+      setError('');
+    } catch (error) {
+      console.error('Error deleting user:', error.response || error.message || error);
+      setError('Failed to delete user');
+    }
+  };
+
   const renderRow = (user) => (
     <>
       <td>{user.id}</td>
       <td>
-        <img src={user.profilePhoto} alt="Profile" className="profile-photo" />
+        <img src={user.profilePhoto || user1} alt="Profile" className="profile-photo" />
       </td>
       <td>{user.firstName}</td>
       <td>{user.lastName}</td>
-      <td>{user.contact}</td>
-      <td>{user.address.length > 50 ? `${user.address.substring(0, 50)}...` : user.address}</td>
+      <td>{user.contactNumber}</td>
+      <td>{user.address?.length > 50 ? `${user.address.substring(0, 50)}...` : user.address}</td>
       <td>{user.email}</td>
-      <td>{user.password}</td>
       <td className="actions">
-        <button className="view-btn"><FaEye /></button>
-        <button className="edit-btn"><MdModeEdit /></button>
-        <button className="delete-btn"><MdDelete /></button>
+        <button className="view-btn" onClick={() => handleView(user.id)}><FaEye /></button>
+        {/* <button className="edit-btn" onClick={() => handleEdit(user.id)}><MdModeEdit /></button> */}
+        <button className="delete-btn" onClick={() => handleDelete(user.id)}><MdDelete /></button>
       </td>
     </>
   );
@@ -195,7 +78,12 @@ const UserManagement = () => {
   return (
     <div className="user-management">
       <h2>User Management</h2>
-      <PaginationTable data={users} columns={columns} renderRow={renderRow} />
+      {error && <p className="error">{error}</p>}
+      {users.length > 0 ? (
+        <PaginationTable data={users} columns={columns} renderRow={renderRow} />
+      ) : (
+        <p>No users available</p>
+      )}
     </div>
   );
 };

@@ -1,9 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UserContext } from '../context/UserContext';
 
 const ProfilePage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate(); 
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -11,34 +12,24 @@ const ProfilePage = () => {
     address: '',
     email: '',
     password: '',
-    bookings: []
   });
-
   const [image, setImage] = useState(null);
-  const navigate = useNavigate();
-  const { currentUser } = useContext(UserContext);
-  const token = currentUser?.token;
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    } else {
-      fetchProfile();
-    }
-  }, [token, navigate]);
-
-  const fetchProfile = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/v1/users/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/auth/admin/users/${id}`);
+        setProfile(response.data);
+        if (response.data.profilePhoto) {
+          setImage(response.data.profilePhoto);
         }
-      });
-      setProfile(response.data);
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    }
-  };
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -48,31 +39,37 @@ const ProfilePage = () => {
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setImage(URL.createObjectURL(e.target.files[0]));
+      setProfile({ ...profile, profilePhoto: e.target.files[0] });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    for (const key in profile) {
+      formData.append(key, profile[key]);
+    }
+
     try {
-      const response = await axios.put(`${process.env.REACT_APP_BASE_URL}/api/v1/users/profile`, profile, {
+      await axios.put(`http://localhost:8080/api/v1/auth/admin/users/${id}`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      setProfile(response.data);
       alert('Profile updated successfully');
+      navigate('/user-management');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile:',error.response || error.message || error);
     }
   };
 
   return (
     <div className="profile">
       <h1>User Profile</h1>
-      <form id='profileForm' method='post' encType='multipart/form-data' className="profile-form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <div className="image-upload">
           {image && <img src={image} alt="User" className="user-image" />}
-          <input type="file" name='profilePhoto' accept="image/*" onChange={handleImageChange} />
+          <input type="file" name="profilePhoto" accept="image/*" onChange={handleImageChange} />
         </div>
         <div className="form-group">
           <label>First Name:</label>
@@ -84,7 +81,7 @@ const ProfilePage = () => {
         </div>
         <div className="form-group">
           <label>Contact:</label>
-          <input type="text" name="contact" value={profile.contact} onChange={handleInputChange} />
+          <input type="text" name="contact" value={profile.contactNumber} onChange={handleInputChange} />
         </div>
         <div className="form-group">
           <label>Address:</label>

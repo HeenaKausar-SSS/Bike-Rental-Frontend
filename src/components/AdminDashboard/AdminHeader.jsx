@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaHome, FaUsers, FaCalendarAlt, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { FaHome, FaUsers, FaCalendarAlt, FaSignOutAlt, FaBars, FaEdit } from 'react-icons/fa';
 import { RiEBike2Fill } from "react-icons/ri";
 import { MdInventory2 } from "react-icons/md";
 import { Link } from 'react-router-dom';
@@ -26,6 +26,9 @@ const AdminHeader = () => {
           <Link to={'/admin'} onClick={closeSidebar}>
             <FaHome /> Home
           </Link>
+          {/* <Link to={'/admin/admin-edit-profile'} onClick={closeSidebar}>
+            <FaEdit /> Edit Profile
+          </Link> */}
           <Link to={'/admin/manage-user'} onClick={closeSidebar}>
             <FaUsers /> Manage User
           </Link>

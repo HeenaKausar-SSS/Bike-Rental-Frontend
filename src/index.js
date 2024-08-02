@@ -24,6 +24,7 @@ import InventoryMng from './pages/AdminDashboard/InventoryMng';
 import AdminRegister from './pages/AdminDashboard/AdminRegister';
 import AdminLogin from './pages/AdminDashboard/AdminLogin';
 import UserProvider from './context/UserContext';
+import EditAdminProfile from './pages/AdminDashboard/EditAdminProfile';
 
 const router = createBrowserRouter([
   {
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
       {index: true, element: <Homepage/>},
       { path: "admin-register", element: <AdminRegister /> },
       { path: "admin-login", element: <AdminLogin /> },
+      // { path: "admin-edit-profile", element: <EditAdminProfile /> },
       { path: "manage-user", element: <UserMng /> },
       { path: "manage-booking", element: <BookingMng /> },
       { path: "manage-vehicle", element: <VehicleMng /> },
