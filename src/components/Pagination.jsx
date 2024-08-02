@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import PropTypes from 'prop-types';
 
 const PaginationTable = ({ data, columns, renderRow }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,6 +42,12 @@ const PaginationTable = ({ data, columns, renderRow }) => {
       </div>
     </div>
   );
+};
+
+PaginationTable.propTypes = {
+  data: PropTypes.array.isRequired,
+  columns: PropTypes.array.isRequired,
+  renderRow: PropTypes.func.isRequired,
 };
 
 export default PaginationTable;
