@@ -1,15 +1,14 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { UserContext } from '../context/UserContext';
+import { useNavigate, useParams } from 'react-router';
 import axios from 'axios';
+import { UserContext } from '../context/UserContext';
 
-function EditBooking({ id }) {
+function EditBookingPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     contact: '',
     address: '',
-    licensePhoto: null,
     startDate: '',
     startTime: '',
     endDate: '',
@@ -25,29 +24,42 @@ function EditBooking({ id }) {
 
   const [errors, setErrors] = useState({});
   const [openSection, setOpenSection] = useState(null);
+  const [bikeOptions, setBikeOptions] = useState([]);
   const navigate = useNavigate();
+  const { bookingId } = useParams(); // Get booking ID from URL params
 
   const { currentUser } = useContext(UserContext);
   const token = currentUser?.token;
 
+  // Fetch bike data on component mount
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    } else {
-      // Fetch the existing booking data and set it to formData
-      axios.get(`${process.env.REACT_APP_BASE_URL}/api/v1/bookings/history/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(response => {
+    const fetchBikeOptions = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/vehicles/admin/status/notBooked');
+        setBikeOptions(response.data);
+      } catch (error) {
+        console.error('Error fetching bike options:', error);
+      }
+    };
+
+    fetchBikeOptions();
+  }, []);
+
+  // Fetch booking data on component mount
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/bookings/admin/${bookingId}`);
         setFormData(response.data);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching booking data:', error);
-      });
+      }
+    };
+
+    if (bookingId) {
+      fetchBookingData();
     }
-  }, [id, token, navigate]);
+  }, [bookingId, token]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -73,27 +85,30 @@ function EditBooking({ id }) {
     return Object.keys(formErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach(key => {
-        formDataToSend.append(key, formData[key]);
-      });
-
-      axios.put(`${process.env.REACT_APP_BASE_URL}/api/bookings/${id}`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(response => {
-        console.log('Booking updated:', response.data);
-        navigate('/book'); // Navigate to the bookings page or wherever appropriate
-      })
-      .catch(error => {
-        console.error('Error updating booking:', error);
-      });
+      try {
+        const response = await axios.put(`http://localhost:8080/api/v1/bookings/${bookingId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const updatedBooking = response.data;
+        console.log(updatedBooking);
+        if (!updatedBooking) {
+          setErrors('Unable to update booking, try again');
+        } else {
+          setErrors('');
+          navigate('/');
+        }
+      } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+          setErrors(error.response.data.message);
+        } else {
+          setErrors('An error occurred. Please try again.');
+        }
+      }
     }
   };
 
@@ -103,7 +118,7 @@ function EditBooking({ id }) {
 
   return (
     <div className="booking">
-      <h1>Edit Booking</h1>
+      <h1>EDIT BOOKING</h1>
       <form onSubmit={handleSubmit}>
         <div className="section">
           <div className="section-header" onClick={() => toggleSection('personalInfo')}>
@@ -126,10 +141,6 @@ function EditBooking({ id }) {
               <div>
                 <label>Address:</label>
                 <input type="text" name="address" value={formData.address} onChange={handleChange} required />
-              </div>
-              <div>
-                <label>Driver's License Photo:</label>
-                <input type="file" name="licensePhoto" onChange={handleChange} />
               </div>
             </div>
           )}
@@ -163,7 +174,14 @@ function EditBooking({ id }) {
               </div>
               <div>
                 <label>Type of Bike:</label>
-                <input type="text" name="bikeType" value={formData.bikeType} onChange={handleChange} required />
+                <select name="bikeType" value={formData.bikeType} onChange={handleChange} required>
+                  <option value="">Select a bike</option>
+                  {bikeOptions.map(bike => (
+                    <option key={bike.id} value={bike.bikeName}>
+                      {bike.bikeName}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
@@ -222,10 +240,18 @@ function EditBooking({ id }) {
             </div>
           )}
         </div>
-        <button type="submit">Edit</button>
+
+        <div>
+          <label>
+            <input type="checkbox" name="terms" checked={formData.terms} onChange={handleChange} required />
+            I accept the terms and conditions
+          </label>
+          {errors.terms && <span>{errors.terms}</span>}
+        </div>
+        <button type="submit">Submit</button>
       </form>
     </div>
   );
 }
 
-export default EditBooking;
+export default EditBookingPage;

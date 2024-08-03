@@ -9,7 +9,6 @@ function BookingPage() {
     lastName: '',
     contact: '',
     address: '',
-    licensePhoto: null,
     startDate: '',
     startTime: '',
     endDate: '',
@@ -25,16 +24,27 @@ function BookingPage() {
 
   const [errors, setErrors] = useState({});
   const [openSection, setOpenSection] = useState(null);
+  const [bikeOptions, setBikeOptions] = useState([]);
   const navigate = useNavigate();
 
   const { currentUser } = useContext(UserContext);
   const token = currentUser?.token;
 
+  // Fetch bike data on component mount
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    }
-  }, [token, navigate]);
+    const fetchBikeOptions = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/vehicles/admin/status/notBooked');
+        // const availableBikes = response.data.filter(bike => bike.status === 'notBooked');
+        setBikeOptions(response.data);
+      } catch (error) {
+        console.error('Error fetching bike options:', error);
+      }
+    };
+
+    fetchBikeOptions();
+  }, []);
+
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -60,27 +70,26 @@ function BookingPage() {
     return Object.keys(formErrors).length === 0;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
       try {
-        const formDataToSend = new FormData();
-        for (const key in formData) {
-          formDataToSend.append(key, formData[key]);
+        const response = await axios.post('http://localhost:8080/api/v1/bookings', formData);
+        const newBooking = response.data;
+        console.log(newBooking);
+        if (!newBooking) {
+          setErrors('Unable to create booking, try again');
+        } else {
+          setErrors('');
+          navigate('/');
         }
-
-        const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/v1/bookings/book-vehicle`, formDataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        console.log('Form submitted successfully:', response.data);
-        // Handle successful form submission, e.g., navigate to a confirmation page
       } catch (error) {
-        console.error('Error submitting form:', error);
-        // Handle error
+        if (error.response && error.response.data && error.response.data.message) {
+          setErrors(error.response.data.message);
+        } else {
+          setErrors('An error occurred. Please try again.');
+        }
       }
     }
   };
@@ -115,10 +124,6 @@ function BookingPage() {
                 <label>Address:</label>
                 <input type="text" name="address" value={formData.address} onChange={handleChange} required />
               </div>
-              <div>
-                <label>Driver's License Photo:</label>
-                <input type="file" name="licensePhoto" onChange={handleChange} required />
-              </div>
             </div>
           )}
         </div>
@@ -151,7 +156,15 @@ function BookingPage() {
               </div>
               <div>
                 <label>Type of Bike:</label>
-                <input type="text" name="bikeType" value={formData.bikeType} onChange={handleChange} required />
+                <select name="bikeType" value={formData.bikeType} onChange={handleChange} required>
+                  <option value="">Select a bike</option>
+                  {bikeOptions.map(bike => (
+                    <option key={bike.id} value={bike.bikeName}>
+                      {bike.bikeName}
+                    </option>
+                  ))}
+               
+                </select>
               </div>
             </div>
           )}

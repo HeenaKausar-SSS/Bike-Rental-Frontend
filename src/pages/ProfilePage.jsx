@@ -4,16 +4,17 @@ import axios from 'axios';
 
 const ProfilePage = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
-    contact: '',
+    contactNumber: '',
     address: '',
     email: '',
     password: '',
   });
   const [image, setImage] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -21,7 +22,7 @@ const ProfilePage = () => {
         const response = await axios.get(`http://localhost:8080/api/v1/auth/admin/users/${id}`);
         setProfile(response.data);
         if (response.data.profilePhoto) {
-          setImage(response.data.profilePhoto);
+          setImage(`http://localhost:8080/uploads/profile-photos/${response.data.profilePhoto}`);
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -38,28 +39,30 @@ const ProfilePage = () => {
 
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
+      setProfilePhoto(e.target.files[0]);
       setImage(URL.createObjectURL(e.target.files[0]));
-      setProfile({ ...profile, profilePhoto: e.target.files[0] });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
-    for (const key in profile) {
-      formData.append(key, profile[key]);
+    formData.append('userDTO', new Blob([JSON.stringify(profile)], { type: 'application/json' }));
+    if (profilePhoto) {
+      formData.append('profilePhoto', profilePhoto);
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/v1/auth/admin/users/${id}`, formData, {
+      await axios.put(`http://localhost:8080/api/v1/users/update/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       alert('Profile updated successfully');
-      navigate('/user-management');
+      navigate('/');
     } catch (error) {
-      console.error('Error updating profile:',error.response || error.message || error);
+      console.error('Error updating profile:', error.response || error.message || error);
     }
   };
 
@@ -81,7 +84,7 @@ const ProfilePage = () => {
         </div>
         <div className="form-group">
           <label>Contact:</label>
-          <input type="text" name="contact" value={profile.contactNumber} onChange={handleInputChange} />
+          <input type="text" name="contactNumber" value={profile.contactNumber} onChange={handleInputChange} />
         </div>
         <div className="form-group">
           <label>Address:</label>
